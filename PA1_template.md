@@ -3,7 +3,7 @@
 The following libraries are used in this analysis:
 
 ```r
-library(magrittr); library(stringr); library(dplyr); library(ggplot2)
+library(magrittr); library(stringr); library(dplyr); library(ggplot2); library(scales)
 ```
 
 ## Loading and preprocessing the data
@@ -46,10 +46,11 @@ The chart below presents the number of steps taken at each time of day averaged 
 
 
 ```r
-group_by(stepData, interval) %>% summarise (timeAverage=mean(steps, na.rm=TRUE)) ->
+group_by(stepData, interval) %>%
+summarise(timeAverage=mean(steps, na.rm=TRUE)) ->
     timeAverage
-plot(timeAverage$interval, timeAverage$timeAverage, type="l",
-     xlab="Time of Day (minutes past midnight)", 
+plot(strptime(str_pad(timeAverage$interval,width=4,pad="0"),"%H%M"), timeAverage$timeAverage, type="l",
+     xlab="Time of Day", 
      ylab="Steps", main="Average Steps Taken by Time")
 abline(h=mean(timeAverage$timeAverage, na.rm=TRUE),col="red")
 ```
@@ -123,9 +124,10 @@ The chart below compares daily acitivty patterns for weekdays versus weekends.
 stepDataImputed$typeOfDay=factor(NA,levels=c("Weekday","Weekend"))
 stepDataImputed[stepDataImputed$dayOfWeek %in% c("Saturday","Sunday"),"typeOfDay"] <- "Weekend"
 stepDataImputed[is.na(stepDataImputed$typeOfDay),"typeOfDay"] <- "Weekday"
-ggplot(stepDataImputed, aes(x=interval,y=steps)) + 
+ggplot(stepDataImputed, aes(x=strptime(str_pad(interval,width=4,pad="0"),"%H%M"),y=steps)) + 
     stat_summary(fun.y="sum", geom="line") + facet_grid(typeOfDay~.) + 
-    labs(x="Time of Day", y="Average Steps") + ggtitle("Activity Patterns by Type of Day")
+    labs(x="Time of Day", y="Average Steps") + ggtitle("Activity Patterns by Type of Day") + 
+    scale_x_datetime(labels= date_format("%I:%M %p"),breaks=date_breaks("3 hours"))
 ```
 
 ![](PA1_template_files/figure-html/patternComp-1.png) 
